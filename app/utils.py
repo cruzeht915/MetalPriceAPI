@@ -1,8 +1,12 @@
 import requests
 import os
 from dotenv import load_dotenv
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from app.db import db
+from passlib.context import CryptContext
+from jose import JWTError, jwt
+from twilio.rest import Client
+
 load_dotenv()
 
 METALPRICE_API_KEY = os.getenv("METALPRICE_API_KEY")
@@ -16,7 +20,7 @@ def fetch_and_store_prices():
                 "metal": metal, 
                 "price": prices.get(f"USD{metal}", 0),
                 "unit": "USD/oz",
-                "timestamp": datetime.utcnow()
+                "timestamp": datetime.now(timezone.utc)
             }
         store_price(record)
 
@@ -41,14 +45,18 @@ def serialize_price_record(record):
     }
 
 def purge_old_data():
-    six_months_ago = datetime.utcnow() - timedelta(weeks=26)
-    db.prices.delete_many({"timestamp": {"$lt", six_months_ago }})
+    six_months_ago = datetime.now(timezone.utc) - timedelta(weeks=26)
+    db.prices.delete_many({"timestamp": {"$lt": six_months_ago }})
+
+def manual_day_purge(dayz):
+    yesterday = datetime.now(timezone.utc) - timedelta(days=dayz)
+    db.prices.delete_many({"timestamp": {"$gt": yesterday }})
 
 def store_price(record):
     db.prices.insert_one(record)
 
-def backfill_data(metals, days_back=14):
-    now = datetime.utcnow()
+def backfill_data(metals, days_back=21):
+    now = datetime.now(timezone.utc)
     for i in range(days_back):
         date_to_fetch = now - timedelta(days= i)
         for metal in metals:
@@ -61,3 +69,42 @@ def backfill_data(metals, days_back=14):
                     "timestamp": date_to_fetch
                 }
                 store_price(record)
+
+#Authentication Util
+SECRET_KEY = os.getenv("SECRET_KEY")
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ALGORITHM = "HS256"
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def hash_password(password: str):
+    return pwd_context.hash(password)
+
+def verify_password(password, hashed_password):
+    return pwd_context.verify(password, hashed_password)
+
+def create_acess_token(data:dict):
+    to_encode = data.copy()
+    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+#SMS Alerts Util
+TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
+TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
+TWILIO_PHONE_NUMBER = os.getenv("TWILIO_PHONE_NUMBER")
+
+client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+
+def send_sms_alert(to_phone_number: str, message: str):
+    try:
+        message_send = client.messages.create(
+            body= message,
+            from_= TWILIO_PHONE_NUMBER,
+            to= to_phone_number,
+        )
+        return message_send.sid
+    except Exception as e:
+        print(f"Error sending SMS: {e}")
+        return None
+
