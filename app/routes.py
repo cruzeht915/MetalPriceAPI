@@ -1,8 +1,9 @@
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends, status, Body, Request
 from app.db import db
 from app.utils import serialize_price_record, hash_password, verify_password, create_acess_token
-from datetime import datetime, timedelta
-from app.models import UserCreate, UserInDB
+from datetime import datetime, timedelta, timezone
+from app.models import UserCreate, UserInDB, AlertCreate
+from app.auth import get_current_user
 
 router = APIRouter()
 
@@ -18,7 +19,7 @@ async def get_latest_prices():
     
 @router.get("/prices/historical")
 async def get_historical_prices(metal: str, range: str="last_week"):
-    now = datetime.utcnow() 
+    now = datetime.now(timezone.utc) 
     if range=="last_week": 
         start_date = now - timedelta(weeks=1)
     elif range=="last_two_weeks": 
@@ -37,29 +38,22 @@ async def get_historical_prices(metal: str, range: str="last_week"):
     }).sort("timestamp", -1)
     historical_prices = [serialize_price_record(rec) for rec in cursor]
     return historical_prices
-    
-@router.get("/alerts")
-async def set_alert(metal: str, price_threshold: float, above: bool):
-    alert = {
-        "metal": metal,
-        "price_threshold": price_threshold,
-        "above": above,
-        "created_at": datetime.utcnow()
-    }
-    db.alerts.insert_one(alert)
-    return {"message": "Alert set successfully"}
 
 @router.post("/register", response_model=UserInDB)
-async def register_user(user: UserCreate):
-    if db.users.find_one({"email": user.email}):
-        raise HTTPException(status_code=400, detail="Email already registered")
-    
-    hashed_password = hash_password(user.password)
-    user_in_DB = UserInDB(email=user.email, hashed_password=hashed_password)
+async def register_user(user: UserCreate = Body(...)):
+    try:
+        if db.users.find_one({"email": user.email}):
+            raise HTTPException(status_code=400, detail="Email already registered")
+        
+        hashed_password = hash_password(user.password)
+        user_in_DB = UserInDB(email=user.email, hashed_password=hashed_password)
 
-    result = db.users.insert_one(user_in_DB)
-    user_in_DB.id = str(result.inserted_id)
-    return user_in_DB
+        result = db.users.insert_one(user_in_DB.model_dump())
+        user_in_DB.id = str(result.inserted_id)
+        return user_in_DB
+    except Exception as e:
+        print(f"Error{e}")
+        raise HTTPException(status_code=400, detail="Invalid data")
 
 @router.post("/login")
 async def login_user(email: str, password:str):
@@ -69,4 +63,22 @@ async def login_user(email: str, password:str):
     
     access_token = create_acess_token({"sub": email})
     return {"access_token": access_token, "token_type": "bearer"}
+
+@router.post("/alerts", response_model=dict)
+async def set_alert(alert: AlertCreate = Body(...), current_user: dict=Depends(get_current_user)):
+    user_id = str(current_user["_id"])
+    new_alert = {
+        "user_id": user_id,
+        "metal": alert.metal,
+        "price_threshold": alert.threshold,
+        "above": alert.above,
+        "created_at": datetime.now(timezone.utc)
+    }
+    result = db.alerts.insert_one(new_alert)
+    return {"message": "Alert set successfully", "alert_id": str(result.inserted_id)}
+
+@router.get("/my-alerts")
+async def read_alerts(current_user: dict = Depends(get_current_user)):
+    alerts = db.alerts.find({"user_id": str(current_user["_id"])})
+    return [{"id": str(alert["_id"]), "metal": alert["metal"], "price_threshold": alert["price_threshold"], "above": alert["above"]} for alert in alerts]
     
