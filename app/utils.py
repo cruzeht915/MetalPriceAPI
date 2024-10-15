@@ -16,13 +16,15 @@ def fetch_and_store_prices():
     for metal in metals:
         prices = fetch_metal_prices(metal)
         if prices:
+            current_price = prices.get(f"USD{metal}", 0)
             record = {
                 "metal": metal, 
-                "price": prices.get(f"USD{metal}", 0),
+                "price": current_price,
                 "unit": "USD/oz",
                 "timestamp": datetime.now(timezone.utc)
             }
         store_price(record)
+        check_and_send_alerts(metal, current_price)
 
 def fetch_metal_prices(metal, date=None):
     if(date): METALPRICE_API_URL = f"https://api.metalpriceapi.com/v1/{date}"
@@ -107,4 +109,17 @@ def send_sms_alert(to_phone_number: str, message: str):
     except Exception as e:
         print(f"Error sending SMS: {e}")
         return None
+    
+def check_and_send_alerts(metal: str, current_price: float):
+    alerts = db.alerts.find({"metal": metal})
+    for alert in alerts:
+        if (alert["above"] and current_price>alert["price_threshold"]) or (not alert["above"] and current_price<alert["price_threshold"]):
+            message = f"Alert! {metal} has {'risen above' if alert['above'] else 'dropped below'} {alert['price_threshold']}. Current price: {current_price}"
+            send_sms_alert(alert["phone_number"], message)
+            db.alerts.delete_one({"_id": alert["_id"]})
+
+def format_phone_number(phone_number: str):
+    if not phone_number.startswith("+"):
+        return "+1" + phone_number
+    return phone_number
 
