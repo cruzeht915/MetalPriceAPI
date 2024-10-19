@@ -19,13 +19,13 @@ def get_current_user(token: str=Depends(oauth2_scheme)):
     )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
-        email =  payload.get("sub")
-        if email is None:
+        username =  payload.get("sub")
+        if username is None:
             raise credentials_excpetion
     except JWTError:
         raise credentials_excpetion
     
-    user_in_db = db.users.find_one({"email": email})
+    user_in_db = db.users.find_one({"username": username})
     if user_in_db is None:
         raise credentials_excpetion
     return user_in_db

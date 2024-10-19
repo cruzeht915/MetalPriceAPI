@@ -1,7 +1,6 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 from datetime import datetime
-from bson import ObjectId
-from typing import Optional
+from typing import Optional, List
 
 class PriceRecord(BaseModel):
     metal: str
@@ -16,15 +15,16 @@ class AlertCreate(BaseModel):
     phone_number: str
 
 class UserCreate(BaseModel):
-    email: EmailStr
+    username: str
     password: str
 
 class UserInDB(BaseModel):
     id: Optional[str] = None
-    email: EmailStr
+    username: str
     hashed_password: str
+    metals: List[str]
 
 class User(BaseModel):
     id: str
-    email: EmailStr
+    username: str
     

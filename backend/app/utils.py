@@ -12,7 +12,7 @@ load_dotenv()
 METALPRICE_API_KEY = os.getenv("METALPRICE_API_KEY")
 
 def fetch_and_store_prices():
-    metals = ["ALU", "XCU", "IRON", "XPB"]
+    metals = db.globalMetals.find().metals
     for metal in metals:
         prices = fetch_metal_prices(metal)
         if prices:
@@ -74,7 +74,7 @@ def backfill_data(metals, days_back=21):
 
 #Authentication Util
 SECRET_KEY = os.getenv("SECRET_KEY")
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = 45
 ALGORITHM = "HS256"
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

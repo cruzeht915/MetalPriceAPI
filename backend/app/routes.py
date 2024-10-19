@@ -8,9 +8,9 @@ from app.auth import get_current_user
 router = APIRouter()
 
 @router.get("/prices/latest")
-async def get_latest_prices():
+async def get_latest_prices(current_user: dict=Depends(get_current_user)):
     latest_prices = {}
-    metals = ["ALU"]#, "XCU", "IRON", "XPB"]
+    metals = current_user.metals
     for metal in metals:
         latest_record = db.prices.find_one({"metal": metal}, sort=[("timestamp", -1)])
         if latest_record:
@@ -25,11 +25,11 @@ async def get_historical_prices(metal: str, range: str="last_week"):
     elif range=="last_two_weeks": 
         start_date = now - timedelta(weeks=2)
     elif range=="last_month": 
-        start_date = now - timedelta(days=30)
+        start_date = now - timedelta(weeks=4)
     elif range=="last_two_months": 
-        start_date = now - timedelta(days=60)
-    elif range=="last_year": 
-        start_date = now - timedelta(days=365)
+        start_date = now - timedelta(weeks=8)
+    elif range=="last_four_months": 
+        start_date = now - timedelta(weeks=16)
     else:
         raise HTTPException(status_code=400, detail=f"Invalid range specified. Use 'last_week', 'last_two_weeks', 'last_month', 'last_two_months, or 'last_year'.")
     cursor = db.prices.find({
@@ -42,11 +42,11 @@ async def get_historical_prices(metal: str, range: str="last_week"):
 @router.post("/register", response_model=UserInDB)
 async def register_user(user: UserCreate = Body(...)):
     try:
-        if db.users.find_one({"email": user.email}):
-            raise HTTPException(status_code=400, detail="Email already registered")
+        if db.users.find_one({"username": user.username}):
+            raise HTTPException(status_code=400, detail="Username already registered")
         
         hashed_password = hash_password(user.password)
-        user_in_DB = UserInDB(email=user.email, hashed_password=hashed_password)
+        user_in_DB = UserInDB(username=user.username, hashed_password=hashed_password, metals = ["ALU", "XCB", "IRON", "XSN"])
 
         result = db.users.insert_one(user_in_DB.model_dump())
         user_in_DB.id = str(result.inserted_id)
@@ -56,12 +56,12 @@ async def register_user(user: UserCreate = Body(...)):
         raise HTTPException(status_code=400, detail="Invalid data")
 
 @router.post("/login")
-async def login_user(email: str, password:str):
-    user_in_db = db.users.find_one({"email": email})
+async def login_user(username: str, password:str):
+    user_in_db = db.users.find_one({"username": username})
     if not user_in_db or not verify_password(password, user_in_db["hashed_password"]):
-        raise HTTPException(status_code=400, detail="Incorrect email or password")
+        raise HTTPException(status_code=400, detail="Incorrect username or password")
     
-    access_token = create_acess_token({"sub": email})
+    access_token = create_acess_token({"sub": username})
     return {"access_token": access_token, "token_type": "bearer"}
 
 @router.post("/alerts", response_model=dict)
@@ -82,6 +82,30 @@ async def set_alert(alert: AlertCreate = Body(...), current_user: dict=Depends(g
 async def read_alerts(current_user: dict = Depends(get_current_user)):
     alerts = db.alerts.find({"user_id": str(current_user["_id"])})
     return [{"id": str(alert["_id"]), "metal": alert["metal"], "price_threshold": alert["price_threshold"], "above": alert["above"]} for alert in alerts]
+
+@router.get("/my-metals")
+async def personal_metals(current_user: dict = Depends(get_current_user)):
+    return current_user['metals']
+
+@router.post("/add-metals")
+async def add_metals(add: str, current_user: dict = Depends(get_current_user)):
+    if add in current_user['metals']:
+        return {"message": "Metal already in personal metals"}
+    db.users.update_one(
+        {"username": current_user['username']},
+        {"$addToSet": {"metals": add}}
+    )
+    return {"message": "Metal successfully added to personal metals"}
+
+@router.post("/remove-metals")
+async def remove_metals(remove: str, current_user: dict = Depends(get_current_user)):
+    if remove not in current_user['metals']:
+        return {"message": "Metal not in personal metals"}
+    db.users.update_one(
+        {"username": current_user['username']},
+        {"$pull": {"metals": remove}}
+    )
+    return {"message": "Metal successfully removed from personal metals"}
 
 @router.post("/test-alerts")
 async def test_alerts(metal: str, current_price: float):
