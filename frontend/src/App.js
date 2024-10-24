@@ -1,50 +1,70 @@
 import './App.css';
-import React, {useState} from 'react';
+import React from 'react';
+import {BrowserRouter as Router, Routes, Route, Navigate, Link} from 'react-router-dom';
+import Login from './components/Login';
+import Register from './components/Register';
 import Dashboard from './components/Dashboard';
 import HistoricalChart from './components/HistoricalChart';
+import MyMetals from './components/MyMetals';
+
+const isAuthenticated = () => {
+  return !!localStorage.getItem('token');
+};
+
+// const PrivateRoute = ({component: Component, ...rest}) => {
+//   return (
+//     <Route
+//       {...rest}
+//       render = {(props) => 
+//       isAuthenticated()? <Component {...props} /> : <Navigate to="/login" />
+//       }
+//     />
+//   );
+// };
 
 function App() {
-  const [range, setRange] = useState('last_week'); // Default range
-  const [metal, setMetal] = useState('ALU'); // Default metal (Aluminum)
-
-  const metals = [
-    { value: 'ALU', label: 'Aluminum (ALU)' },
-    { value: 'XPB', label: 'Lead (XPB)' },
-    { value: 'XCU', label: 'Copper (XCU)' },
-    { value: 'IRON', label: 'Iron (IRON)' }
-];
   return (
-    <div className="App">
+    // <div>
+    //   <HistoricalChart/>
+    // </div>
+     <div className="App">
       <header className="App-header">
         <h1>Metal Price Tracker</h1>
       </header>
       <main>
-        <Dashboard />
+    <Router>
+      <nav>
+        <ul>
+          <li>
+            <Link to='/login' >Login</Link>
+          </li>
+          <li>
+            <Link to='/register' >Register</Link>
+          </li>
+          <li>
+            <Link to='/historical-prices' >Historical Prices</Link>
+          </li>
+          <li>
+            <Link to='/my-metals' >My Metals</Link>
+          </li>
+          <li>
+            <Link to='/dashboard' >Latest Prices</Link>
+          </li>
+        </ul>
+      </nav>
 
-        {/* Metal Selection Dropdown */}
-        <label>Select Metal: </label>
-        <select onChange={e=> setMetal(e.target.value)} value={metal}>
-          {metals.map((metalOption) => (
-            <option key={metalOption.value} value={metalOption.value}>
-              {metalOption.label}
-            </option>
-          ))}
-        </select>
-        
-        {/* Range Selection Dropdown */}
-        <label>Select Range:</label>
-        <select onChange={e=> setRange(e.target.value)} value={range}>
-          <option value="last_week">Last Week</option>
-          <option value="last_two_weeks">Last Two Weeks</option>
-          <option value="last_month">Last Month</option>
-          <option value="last_two_months">Last Two Months</option>
-          <option value="last_four_months">Last Four Months</option>
-        </select>
+      <Routes>
+        <Route path='/register' element={Register()}/>
+        <Route path='/login' element={Login()}/>
+        <Route path='/historical-prices' element={HistoricalChart()}/>
 
-        {/* Historical Chart*/}
-        <HistoricalChart metal={metal} range={range}/>
+        <Route path='/my-metals' element={MyMetals()}/>
+        <Route path='/dashboard' element={Dashboard()}/>
+        <Route exact path="/" element = {<Navigate to={isAuthenticated() ? "/dashboard" : "/login"} />} />
+      </Routes>
+    </Router>
       </main>
-    </div>
+     </div>
   );
 }
 
