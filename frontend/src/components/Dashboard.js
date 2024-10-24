@@ -3,14 +3,21 @@ import { getLatestPrices } from '../api/apiService';
 
 const Dashboard = () => {
     const [prices, setPrices] = useState({});
+    //const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchPrices = async () => {
             const data = await getLatestPrices();
             setPrices(data);
+            //setLoading(false);
         };
         fetchPrices();
     }, []);
+
+    // if(loading) {
+    //     return <p>Loading prices...</p>;
+    // }
+
     return (
         <div>
             <h2>Latest Metal Prices</h2>

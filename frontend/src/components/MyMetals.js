@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-
-const API_URL = 'http://127.0.0.1:8000';
+import { getMyMetals } from '../api/apiService';
 
 const MyMetals = () => {
     const [metals, setMetals] = useState([]);
@@ -10,11 +8,8 @@ const MyMetals = () => {
     useEffect(() => {
         const fetchMyMetals = async () => {
             try {
-                const token = localStorage.getItem("token");
-                const response = await axios.get(`${API_URL}/my-metalss`, {
-                    headers: { Authorization: `Bearer ${token}`}
-                });
-                setMetals(response.data);
+                const myMetals = await getMyMetals();
+                setMetals(myMetals);
                 setError("");
             } catch (error) {
                 setError("Failed to fetch metals");
@@ -28,11 +23,15 @@ const MyMetals = () => {
     return (
         <div>
             <h3>My Metals</h3>
-            <ul>
-                {metals.map((metal) => {
-                    <li key={metal}>{metal}</li>
-                })}
-            </ul>
+            {metals.length > 0 ? (
+                <ul>
+                    {metals.map((metal) => (
+                        <li key={metal}>{metal}</li>
+                    ))}
+                </ul>
+             ) : (
+                <p>Loading data or no data available...</p>
+            )}
         </div>
     );
 
