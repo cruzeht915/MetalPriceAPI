@@ -27,4 +27,8 @@ class UserInDB(BaseModel):
 class User(BaseModel):
     id: str
     username: str
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
     

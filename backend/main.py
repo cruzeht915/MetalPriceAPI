@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from app.routes import router as api_router
 from app.utils import fetch_and_store_prices, purge_old_data, backfill_data
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -6,6 +7,13 @@ from datetime import datetime, timezone, timedelta
 import uvicorn
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins = ["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_credentials = True,
+    allow_methods = ["*"],
+    allow_headers = ["*"]
+)
 
 app.include_router(api_router)
 

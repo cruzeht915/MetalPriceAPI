@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends, status, Body, Request
 from app.db import db
 from app.utils import serialize_price_record, hash_password, verify_password, create_acess_token, check_and_send_alerts
 from datetime import datetime, timedelta, timezone
-from app.models import UserCreate, UserInDB, AlertCreate
+from app.models import UserCreate, UserInDB, AlertCreate, LoginRequest
 from app.auth import get_current_user
 
 router = APIRouter()
@@ -10,7 +10,7 @@ router = APIRouter()
 @router.get("/prices/latest")
 async def get_latest_prices(current_user: dict=Depends(get_current_user)):
     latest_prices = {}
-    metals = current_user.metals
+    metals = current_user['metals']
     for metal in metals:
         latest_record = db.prices.find_one({"metal": metal}, sort=[("timestamp", -1)])
         if latest_record:
@@ -46,7 +46,7 @@ async def register_user(user: UserCreate = Body(...)):
             raise HTTPException(status_code=400, detail="Username already registered")
         
         hashed_password = hash_password(user.password)
-        user_in_DB = UserInDB(username=user.username, hashed_password=hashed_password, metals = ["ALU", "XCB", "IRON", "XSN"])
+        user_in_DB = UserInDB(username=user.username, hashed_password=hashed_password, metals = ["ALU", "XCU", "IRON", "XSN"])
 
         result = db.users.insert_one(user_in_DB.model_dump())
         user_in_DB.id = str(result.inserted_id)
@@ -56,15 +56,15 @@ async def register_user(user: UserCreate = Body(...)):
         raise HTTPException(status_code=400, detail="Invalid data")
 
 @router.post("/login")
-async def login_user(username: str, password:str):
-    user_in_db = db.users.find_one({"username": username})
-    if not user_in_db or not verify_password(password, user_in_db["hashed_password"]):
+async def login_user(request: LoginRequest):
+    user_in_db = db.users.find_one({"username": request.username})
+    if not user_in_db or not verify_password(request.password, user_in_db["hashed_password"]):
         raise HTTPException(status_code=400, detail="Incorrect username or password")
     
-    access_token = create_acess_token({"sub": username})
+    access_token = create_acess_token({"sub": request.username})
     return {"access_token": access_token, "token_type": "bearer"}
 
-@router.post("/alerts", response_model=dict)
+@router.post("/set-alert", response_model=dict)
 async def set_alert(alert: AlertCreate = Body(...), current_user: dict=Depends(get_current_user)):
     user_id = str(current_user["_id"])
     new_alert = {
@@ -93,6 +93,10 @@ async def add_metals(add: str, current_user: dict = Depends(get_current_user)):
         return {"message": "Metal already in personal metals"}
     db.users.update_one(
         {"username": current_user['username']},
+        {"$addToSet": {"metals": add}}
+    )
+    db.globalMetals.update_one(
+        {},
         {"$addToSet": {"metals": add}}
     )
     return {"message": "Metal successfully added to personal metals"}
