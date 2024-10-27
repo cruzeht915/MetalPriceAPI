@@ -1,8 +1,5 @@
 import React, { useState } from 'react';
 import { postLogin } from '../api/apiService';
-import axios from 'axios';
-const API_URL = 'http://127.0.0.1:8000';
-
 
 const Login = () => {
     const [username, setUsername] = useState('');
@@ -10,16 +7,15 @@ const Login = () => {
     const [error, setError] = useState('');
 
     const handleLogin = async (e) => {
-        e.preventDefault();
         try {
-            const response = await axios.post(`${API_URL}/login?username=${username}&password=${password}`);
-            console.log(response.data.access_token)
-            localStorage.setItem('token', response.data.access_token);
-            setError('');
-        } catch (error) {
-            setError("Login failed. Please check your credentials.");
+            e.preventDefault();
+            const response = await postLogin({username, password});
+            setError(response);
+        } catch (e) {
+            console.error("Failed Login!");
         }
-    }
+    };
+    
     return (
         <div>
             <h2>Login</h2>

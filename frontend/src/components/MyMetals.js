@@ -9,6 +9,7 @@ const MyMetals = () => {
         const fetchMyMetals = async () => {
             try {
                 const myMetals = await getMyMetals();
+                console.log(myMetals);
                 setMetals(myMetals);
                 setError("");
             } catch (error) {

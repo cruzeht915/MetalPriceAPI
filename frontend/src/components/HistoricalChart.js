@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import { getHistoricalPrices } from '../api/apiService';
+import { getHistoricalPrices, metals } from '../api/apiService';
 import {Line} from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip } from 'chart.js';
 
@@ -11,17 +11,6 @@ ChartJS.register(
     Title,
     Tooltip
 )
-
-const metals = [
-    { value: 'ALU', label: 'Aluminum (ALU)' },
-    { value: 'XPB', label: 'Lead (XPB)' },
-    { value: 'XCU', label: 'Copper (XCU)' },
-    { value: 'IRON', label: 'Iron (IRON)' },
-    { value: 'XLI', label: 'Lithium (XLI)' },
-    { value: 'NI', label: 'Nickel (NI)' },
-    { value: 'ZNC', label: 'Zinc (ZNC)' },
-
-];
 
 const HistoricalChart = () => {
     const [chartData, setChartData] = useState([]);

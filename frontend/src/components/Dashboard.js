@@ -22,7 +22,7 @@ const Dashboard = () => {
         <div>
             <h2>Latest Metal Prices</h2>
             {Object.keys(prices).length > 0 ? (
-                <ul>
+                <ul style={{listStyleType: 'none'}}>
                     {Object.keys(prices).map((metal) => (
                         <li key={metal}>
                             {metal}: {prices[metal].price} {prices[metal].unit}
