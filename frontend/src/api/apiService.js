@@ -1,8 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://127.0.0.1:8000';
-const token = localStorage.getItem('token');   
-
+const API_URL = 'http://127.0.0.1:8000';  
 
 export const metals = [
     { value: 'ALU', label: 'Aluminum (ALU)' },
@@ -12,12 +10,14 @@ export const metals = [
     { value: 'XLI', label: 'Lithium (XLI)' },
     { value: 'NI', label: 'Nickel (NI)' },
     { value: 'ZNC', label: 'Zinc (ZNC)' },
+    { value: 'XSN', label: 'Tin (XSN)' }
 
 ];
 
 
 //Fetch latest prices
 export const getLatestPrices = async () => {
+    const token = localStorage.getItem('token'); 
     if (!token) {
         console.error("No authentication token found. Please log in.");
         return {};
@@ -26,7 +26,6 @@ export const getLatestPrices = async () => {
         const response = await axios.get(`${API_URL}/prices/latest`, {
             headers: {Authorization: `Bearer ${token}`}
         });
-        console.log(response.data);
         return response.data;
     } catch (error) {
         
@@ -34,6 +33,52 @@ export const getLatestPrices = async () => {
         return {};
     }
 };
+
+export const getMyMetals = async () => {
+    const token = localStorage.getItem('token'); 
+    if (!token) {
+        console.error("No authentication token found. Please log in.");
+        return [];
+    }
+    const response = await axios.get(`${API_URL}/my-metals`, {
+        headers: { Authorization: `Bearer ${token}`}
+    });
+    return response.data;
+};
+
+export const postAddMetal = async (add) => {
+    const token = localStorage.getItem('token'); 
+    if (!token) {
+        return "No authentication token found. Please log in.";
+    }
+    try {
+        const response = await axios.post(`${API_URL}/add-metals?add=${add}`, 
+            {},
+            {headers: { Authorization: `Bearer ${token}`}})
+        return response.data["message"];
+
+    } catch (e) {
+        console.error("Failed to remove metal from MyMetals!", e);
+        return "Failed to remove metal from MyMetals!";
+    }
+}
+
+export const postRemoveMetal = async (remove) => {
+    const token = localStorage.getItem('token'); 
+    if (!token) {
+        return "No authentication token found. Please log in.";
+    }
+    try {
+        const response = await axios.post(`${API_URL}/remove-metals?remove=${remove}`, 
+            {},
+            { headers: { Authorization: `Bearer ${token}`}})
+        return response.data["message"];
+
+    } catch (e) {
+        console.error("Failed to remove metal from MyMetals!", e);
+        return "Failed to remove metal from MyMetals!";
+    }
+}
 
 //Fetch historical prices
 export const getHistoricalPrices = async (metal, range) => {
@@ -46,7 +91,9 @@ export const getHistoricalPrices = async (metal, range) => {
     }
 };
 
+//Handle Alerts
 export const postAlert = async ({metal, threshold, above, phone_number}) => {
+    const token = localStorage.getItem('token'); 
     if (!token) {
         console.error("No authentication token found. Please log in.");
         return "No authentication token found. Please log in.";
@@ -63,7 +110,6 @@ export const postAlert = async ({metal, threshold, above, phone_number}) => {
         }, {
             headers: { Authorization: `Bearer ${token}`}
         });
-        console.log(response.data);
         return response.data["message"];
     } catch (e) {
         console.error(e);
@@ -71,7 +117,17 @@ export const postAlert = async ({metal, threshold, above, phone_number}) => {
     }
 };
 
+export const postRemoveAlert = async (alertID) => {
+    try {
+        const response = await axios.post(`${API_URL}/remove-alert?alertID=${alertID}`);
+        console.log(response.data["message"]);
+    } catch (e) {
+        console.error("Error fetching your alerts", e)
+    }
+}
+
 export const getMyAlerts = async () => {
+    const token = localStorage.getItem('token'); 
     if (!token) {
         console.error("No authentication token found. Please log in.");
         return [];
@@ -80,20 +136,20 @@ export const getMyAlerts = async () => {
         const response = await axios.get(`${API_URL}/my-alerts`, {
             headers: { Authorization: `Bearer ${token}`}
         });
-        console.log(response.data);
         return response.data;
     } catch (e) {
-        return "Error fetching your alerts";
+        console.error("Error fetching your alerts")
+        return [];
     }
 };
 
+//User Authorization
 export const postLogin = async ({username, password}) => {
     try {
         const response = await axios.post(`${API_URL}/login`, {
             username,
             password
         });
-        console.log(response.data);
         localStorage.setItem('token', response.data.access_token);
         return "";
     } catch (error) {
@@ -114,13 +170,3 @@ export const postRegister = async ({username, password}) => {
     }
 };
 
-export const getMyMetals = async () => {
-    if (!token) {
-        console.error("No authentication token found. Please log in.");
-        return [];
-    }
-    const response = await axios.get(`${API_URL}/my-metals`, {
-        headers: { Authorization: `Bearer ${token}`}
-    });
-    return response.data;
-};
