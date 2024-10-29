@@ -8,6 +8,10 @@ from bson import ObjectId
 
 router = APIRouter()
 
+@router.get("/")
+def read_root():
+    return {"message": "API is live!"}
+
 @router.get("/prices/latest")
 async def get_latest_prices(current_user: dict=Depends(get_current_user)):
     latest_prices = {}
