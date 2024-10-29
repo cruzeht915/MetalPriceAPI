@@ -43,6 +43,7 @@ const HistoricalChart = () => {
     
     return (
         <div>
+            <h2>Historical Metal Prices for {metal}</h2>
             {/* Metal Selection Dropdown */}
             <label>Select Metal: </label>
                 <select onChange={e=> setMetal(e.target.value)} value={metal}>
@@ -64,7 +65,6 @@ const HistoricalChart = () => {
                 </select>
 
             {/* Historical Chart*/}
-            <h2>Historical Metal Prices for {metal}</h2>
             <Line data={chartData}/>
         </div>
     );
