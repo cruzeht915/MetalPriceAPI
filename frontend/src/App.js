@@ -5,36 +5,20 @@ import Login from './components/Login';
 import Register from './components/Register';
 import Dashboard from './components/Dashboard';
 import HistoricalChart from './components/HistoricalChart';
-import MyMetals from './components/MyMetals';
-
-const isAuthenticated = () => {
-  return !!localStorage.getItem('token');
-};
-
-// const PrivateRoute = ({component: Component, ...rest}) => {
-//   return (
-//     <Route
-//       {...rest}
-//       render = {(props) => 
-//       isAuthenticated()? <Component {...props} /> : <Navigate to="/login" />
-//       }
-//     />
-//   );
-// };
+import Alerts from './components/Alerts';
+import Logout from './components/Logout';
+import PrivateRoute, {isAuthenticated} from './components/AuthorizeRouts';
 
 function App() {
   return (
-    // <div>
-    //   <HistoricalChart/>
-    // </div>
      <div className="App">
       <header className="App-header">
-        <h1>Metal Price Tracker</h1>
+        <h1>Cruz Metal Price Tracker</h1>
       </header>
       <main>
     <Router>
       <nav>
-        <ul>
+        <ul style={{listStyleType: 'none'}}>
           <li>
             <Link to='/login' >Login</Link>
           </li>
@@ -45,11 +29,12 @@ function App() {
             <Link to='/historical-prices' >Historical Prices</Link>
           </li>
           <li>
-            <Link to='/my-metals' >My Metals</Link>
+            <Link to='/dashboard' >Dashboard</Link>
           </li>
           <li>
-            <Link to='/dashboard' >Latest Prices</Link>
+            <Link to='/alerts'>Alerts</Link>
           </li>
+          <Logout />
         </ul>
       </nav>
 
@@ -58,13 +43,29 @@ function App() {
         <Route path='/login' element={Login()}/>
         <Route path='/historical-prices' element={HistoricalChart()}/>
 
-        <Route path='/my-metals' element={MyMetals()}/>
-        <Route path='/dashboard' element={Dashboard()}/>
+        <Route 
+          path='/dashboard' 
+          element={
+            <PrivateRoute>
+              <Dashboard/>
+            </PrivateRoute>  
+          }
+        />
+        <Route 
+          path='/alerts' 
+          element={
+            <PrivateRoute>
+              <Alerts/>
+            </PrivateRoute>
+          }
+        />
         <Route exact path="/" element = {<Navigate to={isAuthenticated() ? "/dashboard" : "/login"} />} />
       </Routes>
     </Router>
       </main>
+      <div style={{ height: '40vh' }} />
      </div>
+     
   );
 }
 
