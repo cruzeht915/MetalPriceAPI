@@ -4,6 +4,7 @@ from app.utils import serialize_price_record, hash_password, verify_password, cr
 from datetime import datetime, timedelta, timezone
 from app.models import UserCreate, UserInDB, AlertCreate, LoginRequest
 from app.auth import get_current_user
+from bson import ObjectId
 
 router = APIRouter()
 
@@ -77,6 +78,17 @@ async def set_alert(alert: AlertCreate = Body(...), current_user: dict=Depends(g
     }
     result = db.alerts.insert_one(new_alert)
     return {"message": "Alert set successfully", "alert_id": str(result.inserted_id)}
+
+@router.post("/remove-alert", response_model=dict)
+async def remove_alert(alertID: str):
+    try:
+        db.alerts.delete_one(
+            {"_id": ObjectId(alertID)}
+        )
+        return {"message": "Alert set removed", "alert_id": alertID}
+    except Exception as e:
+        print("bbbbbbbbbb")
+        return None
 
 @router.get("/my-alerts")
 async def read_alerts(current_user: dict = Depends(get_current_user)):

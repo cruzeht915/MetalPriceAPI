@@ -11,16 +11,25 @@ load_dotenv()
 
 METALPRICE_API_KEY = os.getenv("METALPRICE_API_KEY")
 
+metals = {'ALU':'Aluminum (ALU)', 
+          'XPB':'Lead (XPB)',
+          'XCU':'Copper (XCU)',
+          'IRON':'Iron (IRON)',
+          'XLI': 'Lithium (XLI)',
+          'NI': 'Nickel (NI)',
+          'ZNC': 'Zinc (ZNC)',
+          'XSN': 'Tin (XSN)'}
+
 def fetch_and_store_prices():
     metals = db.globalMetals.find().metals
     for metal in metals:
         prices = fetch_metal_prices(metal)
         if prices:
-            current_price = prices.get(f"USD{metal}", 0)
+            current_price = prices.get(f"USD{metal}", 0)*16
             record = {
                 "metal": metal, 
                 "price": current_price,
-                "unit": "USD/oz",
+                "unit": "USD/lb",
                 "timestamp": datetime.now(timezone.utc)
             }
         store_price(record)
@@ -66,8 +75,8 @@ def backfill_data(metals, days_back=21):
             if prices:
                 record = {
                     "metal": metal,
-                    "price": prices.get(f"USD{metal}", 0),
-                    "unit": "USD/oz",
+                    "price": prices.get(f"USD{metal}", 0)*16,
+                    "unit": "USD/lb",
                     "timestamp": date_to_fetch
                 }
                 store_price(record)
@@ -114,7 +123,7 @@ def check_and_send_alerts(metal: str, current_price: float):
     alerts = db.alerts.find({"metal": metal})
     for alert in alerts:
         if (alert["above"] and current_price>alert["price_threshold"]) or (not alert["above"] and current_price<alert["price_threshold"]):
-            message = f"Alert! {metal} has {'risen above' if alert['above'] else 'dropped below'} {alert['price_threshold']}. Current price: {current_price}"
+            message = f"Alert! {metals[metal]} has {'risen above' if alert['above'] else 'dropped below'} {alert['price_threshold']} USD/lb. Current price: {current_price} USD/lb"
             send_sms_alert(alert["phone_number"], message)
             db.alerts.delete_one({"_id": alert["_id"]})
 
