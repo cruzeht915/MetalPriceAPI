@@ -21,8 +21,8 @@ metals = {'ALU':'Aluminum (ALU)',
           'XSN': 'Tin (XSN)'}
 
 def fetch_and_store_prices():
-    metals = db.globalMetals.find().metals
-    for metal in metals:
+    metales = metals.keys()
+    for metal in metales:
         prices = fetch_metal_prices(metal)
         if prices:
             current_price = prices.get(f"USD{metal}", 0)*16
@@ -38,13 +38,15 @@ def fetch_and_store_prices():
 def fetch_metal_prices(metal, date=None):
     if(date): METALPRICE_API_URL = f"https://api.metalpriceapi.com/v1/{date}"
     else: METALPRICE_API_URL = "https://api.metalpriceapi.com/v1/latest"
-
-    response = requests.get(METALPRICE_API_URL, params = {"api_key": METALPRICE_API_KEY, "currencies":metal, "base": "USD" })
-    data = response.json()
-    if data.get("success"):
-        return data['rates']
-    else:
-        return None
+    try:
+        response = requests.get(METALPRICE_API_URL, params = {"api_key": METALPRICE_API_KEY, "currencies":metal, "base": "USD" })
+        data = response.json()
+        if data.get("success"):
+            return data['rates']
+        else:
+            return None
+    except Exception as e:
+        raise Exception("metalpriceapi Error!", e)
     
 def serialize_price_record(record):
     return {

@@ -1,16 +1,32 @@
-from fastapi import APIRouter, HTTPException, Depends, status, Body, Request
+from fastapi import APIRouter, HTTPException, Depends, status, Body, Request, Header
 from app.db import db
-from app.utils import serialize_price_record, hash_password, verify_password, create_acess_token, check_and_send_alerts
+from app.utils import serialize_price_record, hash_password, verify_password, create_acess_token, check_and_send_alerts, fetch_and_store_prices
 from datetime import datetime, timedelta, timezone
 from app.models import UserCreate, UserInDB, AlertCreate, LoginRequest
 from app.auth import get_current_user
 from bson import ObjectId
+from dotenv import load_dotenv
+import os
 
 router = APIRouter()
+
+load_dotenv()
+
+SECRET_API_KEY = os.getenv("SECRET_API_KEY")
 
 @router.get("/")
 def read_root():
     return {"message": "API is live!"}
+
+@router.get("/fetch-prices")
+async def fetch_prices(api_key: str = Header(None)):
+    try:
+        if api_key != SECRET_API_KEY:
+            raise HTTPException(status_code=401, detail="Unauthorized")
+        fetch_and_store_prices()
+        return {"status": "success", "data_fetched_at": datetime.now(timezone.utc)}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 @router.get("/prices/latest")
 async def get_latest_prices(current_user: dict=Depends(get_current_user)):
@@ -109,10 +125,6 @@ async def add_metals(add: str, current_user: dict = Depends(get_current_user)):
         return {"message": "Metal already in personal metals"}
     db.users.update_one(
         {"username": current_user['username']},
-        {"$addToSet": {"metals": add}}
-    )
-    db.globalMetals.update_one(
-        {},
         {"$addToSet": {"metals": add}}
     )
     return {"message": "Metal successfully added to personal metals"}
