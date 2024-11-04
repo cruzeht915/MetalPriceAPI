@@ -21,6 +21,14 @@ metals = {'ALU':'Aluminum (ALU)',
           'XSN': 'Tin (XSN)'}
 
 def fetch_and_store_prices():
+    metals = {'ALU':'Aluminum (ALU)', 
+          'XPB':'Lead (XPB)',
+          'XCU':'Copper (XCU)',
+          'IRON':'Iron (IRON)',
+          'XLI': 'Lithium (XLI)',
+          'NI': 'Nickel (NI)',
+          'ZNC': 'Zinc (ZNC)',
+          'XSN': 'Tin (XSN)'}
     metales = metals.keys()
     for metal in metales:
         prices = fetch_metal_prices(metal)
