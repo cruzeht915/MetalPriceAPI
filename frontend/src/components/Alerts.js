@@ -1,6 +1,5 @@
 import React, {useEffect, useState} from 'react';
 import { postAlert, getMyAlerts, postRemoveAlert, metals } from '../api/apiService'; 
-import axios from 'axios';
 
 const Alerts = () => {
     const [metal, setMetal] = useState("ALU");
