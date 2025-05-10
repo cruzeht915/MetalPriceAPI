@@ -5,7 +5,7 @@ const Dashboard = () => {
     const [prices, setPrices] = useState({});
 
     const [myMetals, setMyMetals] = useState([]);
-    const [_error, setError] = useState('');
+    const setError = useState('')[1];
 
     useEffect(() => {
         fetchPrices();
