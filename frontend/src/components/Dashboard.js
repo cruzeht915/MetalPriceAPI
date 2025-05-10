@@ -7,14 +7,6 @@ const Dashboard = () => {
     const [myMetals, setMyMetals] = useState([]);
     const setError = useState('')[1];
 
-    useEffect(() => {
-        fetchPrices();
-    }, []);
-
-    useEffect(() => {
-        fetchMyMetals();
-    }, []);
-
     const fetchPrices = async () => {
         const data = await getLatestPrices();
         setPrices(data);
@@ -30,6 +22,14 @@ const Dashboard = () => {
             setError("Failed to fetch metals");
         }
     };
+    
+    useEffect(() => {
+        fetchPrices();
+    }, []);
+
+    useEffect(() => {
+        fetchMyMetals();
+    }, []);
 
     const handleRemoveMetal = async (e) => {
         e.preventDefault();
