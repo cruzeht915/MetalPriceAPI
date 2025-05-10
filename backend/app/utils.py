@@ -20,6 +20,7 @@ metals = {'ALU':'Aluminum (ALU)',
           'ZNC': 'Zinc (ZNC)',
           'XSN': 'Tin (XSN)'}
 
+#Get and store metal prices
 def fetch_and_store_prices():
     metals = {'ALU':'Aluminum (ALU)', 
           'XPB':'Lead (XPB)',
@@ -65,6 +66,10 @@ def serialize_price_record(record):
         "timestamp": record["timestamp"].isoformat()
     }
 
+def store_price(record):
+    db.prices.insert_one(record)
+
+#Scripts for data cleaning and backfilling
 def purge_old_data():
     six_months_ago = datetime.now(timezone.utc) - timedelta(weeks=26)
     db.prices.delete_many({"timestamp": {"$lt": six_months_ago }})
@@ -73,12 +78,9 @@ def manual_day_purge(dayz):
     yesterday = datetime.now(timezone.utc) - timedelta(days=dayz)
     db.prices.delete_many({"timestamp": {"$gt": yesterday }})
 
-def store_price(record):
-    db.prices.insert_one(record)
-
 def backfill_data(metals, days_back=21):
     now = datetime.now(timezone.utc)
-    for i in range(days_back):
+    for i in range(21, days_back):
         date_to_fetch = now - timedelta(days= i)
         for metal in metals:
             prices = fetch_metal_prices(metal, date_to_fetch.strftime("%Y-%m-%d"))
