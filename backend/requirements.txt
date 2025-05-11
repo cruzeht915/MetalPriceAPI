@@ -7,6 +7,7 @@ anyio==4.6.0
 APScheduler==3.10.4
 attrs==24.2.0
 bcrypt==4.2.0
+black==25.1.0
 blinker==1.8.2
 certifi==2024.8.30
 cffi==1.17.1
@@ -23,13 +24,18 @@ frozenlist==1.4.1
 h11==0.14.0
 httptools==0.6.4
 idna==3.10
+iniconfig==2.1.0
 itsdangerous==2.2.0
 Jinja2==3.1.4
 MarkupSafe==3.0.1
 marshmallow==3.22.0
 multidict==6.1.0
+mypy_extensions==1.1.0
 packaging==24.1
 passlib==1.7.4
+pathspec==0.12.1
+platformdirs==4.3.8
+pluggy==1.5.0
 propcache==0.2.0
 pyasn1==0.6.1
 pycparser==2.22
@@ -37,6 +43,7 @@ pydantic==2.9.2
 pydantic_core==2.23.4
 PyJWT==2.9.0
 pymongo==4.10.1
+pytest==8.3.5
 python-dotenv==1.0.1
 python-jose==3.3.0
 python-multipart==0.0.12
