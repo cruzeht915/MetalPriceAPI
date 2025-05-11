@@ -10,7 +10,7 @@ import uvicorn
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", 
+    allow_origins=["http://localhost:3000",
                    "https://metal-price-api.vercel.app"],
     allow_credentials=True,
     allow_methods=["*"],
@@ -23,8 +23,8 @@ app.include_router(api_router)
 
 # scheduler.add_job(fetch_and_store_prices, 'interval', hours=6)
 # scheduler.add_job(purge_old_data, 'interval', days=1)
-# scheduler.add_job(backfill_data, 'date', 
-#                   run_date=datetime.now(timezone.utc), 
+# scheduler.add_job(backfill_data, 'date',
+#                   run_date=datetime.now(timezone.utc),
 #                   args=(["ALU", "XCU", "IRON", "XPB"], 60))
 # scheduler.start()
 

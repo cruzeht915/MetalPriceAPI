@@ -58,7 +58,7 @@ def fetch_metal_prices(metal, date=None):
     try:
         response = requests.get(
             METALPRICE_API_URL,
-            params={"api_key": METALPRICE_API_KEY, 
+            params={"api_key": METALPRICE_API_KEY,
                     "currencies": metal, "base": "USD"},
         )
         data = response.json()
@@ -100,7 +100,7 @@ def backfill_data(metals, days_back=21):
     for i in range(21, days_back):
         date_to_fetch = now - timedelta(days=i)
         for metal in metals:
-            prices = fetch_metal_prices(metal, 
+            prices = fetch_metal_prices(metal,
                                         date_to_fetch.strftime("%Y-%m-%d"))
             if prices:
                 record = {
@@ -163,9 +163,10 @@ def check_and_send_alerts(metal: str, current_price: float):
         if (alert["above"] and current_price > alert["price_threshold"]) or (
             not alert["above"] and current_price < alert["price_threshold"]
         ):
-            message = (f"Alert! {metals[metal]} has" 
-                       f"{'risen above' if alert['above'] else 'dropped below'}" 
-                       f"{alert['price_threshold']} USD/lb. Current price: {current_price} USD/lb")
+            message = (f"Alert! {metals[metal]} has"
+                f"{'risen above' if alert['above'] else 'dropped below'}"
+                f"{alert['price_threshold']} USD/lb." 
+                f"Current price: {current_price} USD/lb")
             send_sms_alert(alert["phone_number"], message)
             db.alerts.delete_one({"_id": alert["_id"]})
 
