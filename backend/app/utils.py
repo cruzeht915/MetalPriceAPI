@@ -163,10 +163,12 @@ def check_and_send_alerts(metal: str, current_price: float):
         if (alert["above"] and current_price > alert["price_threshold"]) or (
             not alert["above"] and current_price < alert["price_threshold"]
         ):
-            message = (f"Alert! {metals[metal]} has"
+            message = (
+                f"Alert! {metals[metal]} has"
                 f"{'risen above' if alert['above'] else 'dropped below'}"
-                f"{alert['price_threshold']} USD/lb." 
-                f"Current price: {current_price} USD/lb")
+                f"{alert['price_threshold']} USD/lb."
+                f"Current price: {current_price} USD/lb"
+            )
             send_sms_alert(alert["phone_number"], message)
             db.alerts.delete_one({"_id": alert["_id"]})
 
