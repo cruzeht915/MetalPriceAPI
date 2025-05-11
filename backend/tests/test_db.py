@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException
-from config import db
+from app.db import db
 
 app = FastAPI()
 
