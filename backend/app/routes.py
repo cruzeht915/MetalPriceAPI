@@ -33,7 +33,8 @@ async def fetch_prices(api_key: str = Header(None)):
         if api_key != SECRET_API_KEY:
             raise HTTPException(status_code=401, detail="Unauthorized")
         fetch_and_store_prices()
-        return {"status": "success", "data_fetched_at": datetime.now(timezone.utc)}
+        return {"status": "success", 
+                "data_fetched_at": datetime.now(timezone.utc)}
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
@@ -43,7 +44,8 @@ async def get_latest_prices(current_user: dict = Depends(get_current_user)):
     latest_prices = {}
     metals = current_user["metals"]
     for metal in metals:
-        latest_record = db.prices.find_one({"metal": metal}, sort=[("timestamp", -1)])
+        latest_record = db.prices.find_one({"metal": metal}, 
+                                           sort=[("timestamp", -1)])
         if latest_record:
             latest_prices[metal] = serialize_price_record(latest_record)
     return latest_prices
@@ -65,7 +67,8 @@ async def get_historical_prices(metal: str, range: str = "last_week"):
     else:
         raise HTTPException(
             status_code=400,
-            detail="Invalid range specified. Use 'last_week', 'last_two_weeks', 'last_month', 'last_two_months, or 'last_year'.",
+            detail="Invalid range specified. Use 'last_week', " \
+            "'last_two_weeks', 'last_month', 'last_two_months, or 'last_year'.",
         )
     cursor = db.prices.find(
         {"metal": metal, "timestamp": {"$gte": start_date, "$lte": now}}
@@ -78,7 +81,8 @@ async def get_historical_prices(metal: str, range: str = "last_week"):
 async def register_user(user: UserCreate = Body(...)):
     try:
         if db.users.find_one({"username": user.username}):
-            raise HTTPException(status_code=400, detail="Username already registered")
+            raise HTTPException(status_code=400,
+                                detail="Username already registered")
 
         hashed_password = hash_password(user.password)
         user_in_DB = UserInDB(
@@ -92,7 +96,8 @@ async def register_user(user: UserCreate = Body(...)):
         return user_in_DB
     except Exception as e:
         print(f"Error{e}")
-        raise HTTPException(status_code=400, detail="Invalid data")
+        raise HTTPException(status_code=400, 
+                            detail="Invalid data")
 
 
 @router.post("/login")
@@ -101,7 +106,8 @@ async def login_user(request: LoginRequest):
     if not user_in_db or not verify_password(
         request.password, user_in_db["hashed_password"]
     ):
-        raise HTTPException(status_code=400, detail="Incorrect username or password")
+        raise HTTPException(status_code=400, 
+                            detail="Incorrect username or password")
 
     access_token = create_acess_token({"sub": request.username})
     return {"access_token": access_token, "token_type": "bearer"}
@@ -109,7 +115,8 @@ async def login_user(request: LoginRequest):
 
 @router.post("/set-alert", response_model=dict)
 async def set_alert(
-    alert: AlertCreate = Body(...), current_user: dict = Depends(get_current_user)
+    alert: AlertCreate = Body(...), 
+    current_user: dict = Depends(get_current_user)
 ):
     user_id = str(current_user["_id"])
     new_alert = {
@@ -121,14 +128,16 @@ async def set_alert(
         "created_at": datetime.now(timezone.utc),
     }
     result = db.alerts.insert_one(new_alert)
-    return {"message": "Alert set successfully", "alert_id": str(result.inserted_id)}
+    return {"message": "Alert set successfully", 
+            "alert_id": str(result.inserted_id)}
 
 
 @router.post("/remove-alert", response_model=dict)
 async def remove_alert(alertID: str):
     try:
         db.alerts.delete_one({"_id": ObjectId(alertID)})
-        return {"message": "Alert set removed", "alert_id": alertID}
+        return {"message": "Alert set removed", 
+                "alert_id": alertID}
     except Exception as e:
         print("bbbbbbbbbb")
         return None
