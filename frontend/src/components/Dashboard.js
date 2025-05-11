@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useCallback} from 'react';
 import { getLatestPrices, getMyMetals, postRemoveMetal, postAddMetal, metals } from '../api/apiService';
 
 const Dashboard = () => {
@@ -7,13 +7,13 @@ const Dashboard = () => {
     const [myMetals, setMyMetals] = useState([]);
     const setError = useState('')[1];
 
-    const fetchPrices = async () => {
+    const fetchPrices = useCallback( async () => {
         const data = await getLatestPrices();
         setPrices(data);
         
-    };
+    }, []);
 
-    const fetchMyMetals = async () => {
+    const fetchMyMetals = useCallback( async () => {
         try {
             const response = await getMyMetals();
             setMyMetals(response);
@@ -21,15 +21,15 @@ const Dashboard = () => {
         } catch (error) {
             setError("Failed to fetch metals");
         }
-    };
+    }, []);
     
     useEffect(() => {
         fetchPrices();
-    }, []);
+    }, [fetchPrices]);
 
     useEffect(() => {
         fetchMyMetals();
-    }, []);
+    }, [fetchMyMetals]);
 
     const handleRemoveMetal = async (e) => {
         e.preventDefault();
