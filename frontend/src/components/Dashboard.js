@@ -11,7 +11,7 @@ const Dashboard = () => {
         const data = await getLatestPrices();
         setPrices(data);
         
-    }, [getLatestPrices, setPrices]);
+    }, [setPrices]);
 
     const fetchMyMetals = useCallback( async () => {
         try {
@@ -21,7 +21,7 @@ const Dashboard = () => {
         } catch (error) {
             setError("Failed to fetch metals");
         }
-    }, [setMyMetals, getMyMetals, setError]);
+    }, [setMyMetals, setError]);
     
     useEffect(() => {
         fetchPrices();
