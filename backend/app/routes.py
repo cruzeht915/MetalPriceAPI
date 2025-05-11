@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends, status, Body, Request, Header
+from fastapi import APIRouter, HTTPException, Depends, Body, Header
 from app.db import db
 from app.utils import (
     serialize_price_record,
@@ -65,7 +65,7 @@ async def get_historical_prices(metal: str, range: str = "last_week"):
     else:
         raise HTTPException(
             status_code=400,
-            detail=f"Invalid range specified. Use 'last_week', 'last_two_weeks', 'last_month', 'last_two_months, or 'last_year'.",
+            detail="Invalid range specified. Use 'last_week', 'last_two_weeks', 'last_month', 'last_two_months, or 'last_year'.",
         )
     cursor = db.prices.find(
         {"metal": metal, "timestamp": {"$gte": start_date, "$lte": now}}

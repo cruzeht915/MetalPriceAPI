@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from datetime import datetime, timedelta, timezone
 from app.db import db
 from passlib.context import CryptContext
-from jose import JWTError, jwt
+from jose import jwt
 from twilio.rest import Client
 
 load_dotenv()
