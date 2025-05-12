@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = "Metal-price-tracker-env.eba-dstcmqcj.us-east-2.elasticbeanstalk.com";  
+const API_URL = "http://Metal-price-tracker-env.eba-dstcmqcj.us-east-2.elasticbeanstalk.com";  
 
 export const metals = [
     { value: 'ALU', label: 'Aluminum (ALU)' },
